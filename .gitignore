@@ -1,0 +1,30 @@
+# Build outputs
+build/
+cmake-build-*/
+out/
+*.o
+*.obj
+*.exe
+*.out
+*.a
+*.so
+*.dylib
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Generated demo data (recreate with examples/generate_sample_data.sh)
+examples/sample_data/
