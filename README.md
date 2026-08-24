@@ -6,7 +6,7 @@
 
 **Find duplicate files. Back them up incrementally. Trust that both actually worked.**
 
-[![CI](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml)
+[![CI](https://github.com/lucasverissimo159/File-Warden/tree/main/.github/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/File-Warden/tree/main/.github/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
@@ -342,7 +342,7 @@ MIT — see [LICENSE](LICENSE).
 
 **Encontre arquivos duplicados. Faça backup deles de forma incremental. Confie que ambos realmente funcionaram.**
 
-[![CI](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml)
+[![CI](https://github.com/lucasverissimo159/File-Warden/tree/main/.github/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/File-Warden/tree/main/.github/workflows/ci.yml)
 [![Licença: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
 ![Zero dependências](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
