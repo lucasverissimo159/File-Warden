@@ -6,12 +6,10 @@
 
 **Find duplicate files. Back them up incrementally. Trust that both actually worked.**
 
-[![CI](https://github.com/YOUR_USERNAME/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/filewarden/actions/workflows/ci.yml)
+[![CI](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
-
-> Replace `YOUR_USERNAME` above once this is pushed to GitHub, and the badge will reflect real CI runs.
 
 ## The problem
 
@@ -344,12 +342,10 @@ MIT — see [LICENSE](LICENSE).
 
 **Encontre arquivos duplicados. Faça backup deles de forma incremental. Confie que ambos realmente funcionaram.**
 
-[![CI](https://github.com/YOUR_USERNAME/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/filewarden/actions/workflows/ci.yml)
+[![CI](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/lucasverissimo159/filewarden/actions/workflows/ci.yml)
 [![Licença: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
 ![Zero dependências](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
-
-> Substitua `YOUR_USERNAME` acima assim que for enviado para o GitHub, e o selo refletirá execuções reais de CI.
 
 ## O problema
 
