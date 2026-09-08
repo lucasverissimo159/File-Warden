@@ -143,6 +143,24 @@ TEST(backup_restore_reproduces_exact_content) {
     CHECK_EQ(readFile(dest / "top.txt"), std::string("top content"));
 }
 
+TEST(backup_restore_removes_files_not_in_snapshot) {
+    fs::path src = freshTempDir("bk_restore_cleanup_src");
+    fs::path store = freshTempDir("bk_restore_cleanup_store");
+    fs::path dest = freshTempDir("bk_restore_cleanup_dest");
+    writeFile(src / "kept.txt", "kept");
+    writeFile(dest / "stale.txt", "must be removed");
+    writeFile(dest / "nested" / "stale.txt", "must also be removed");
+
+    ThreadPool pool(2);
+    BackupEngine engine(store);
+    auto stats = engine.createSnapshot(src, pool);
+    engine.restoreSnapshot(stats.snapshotId, dest, /*verify=*/true);
+
+    CHECK_TRUE(fs::exists(dest / "kept.txt"));
+    CHECK_TRUE(!fs::exists(dest / "stale.txt"));
+    CHECK_TRUE(!fs::exists(dest / "nested"));
+}
+
 TEST(backup_restore_of_older_snapshot_excludes_later_additions) {
     fs::path src = freshTempDir("bk_pointintime_src");
     fs::path store = freshTempDir("bk_pointintime_store");
@@ -177,6 +195,22 @@ TEST(backup_list_snapshots_returns_sorted_ids) {
     auto ids = engine.listSnapshots();
     CHECK_EQ(ids.size(), size_t(2));
     CHECK_TRUE(ids[0] < ids[1]);
+}
+
+TEST(backup_consecutive_snapshots_get_unique_ids) {
+    fs::path src = freshTempDir("bk_collision_src");
+    fs::path store = freshTempDir("bk_collision_store");
+    writeFile(src / "a.txt", "a");
+
+    ThreadPool pool(2);
+    BackupEngine engine(store);
+    auto first = engine.createSnapshot(src, pool);
+    auto second = engine.createSnapshot(src, pool);
+
+    CHECK_TRUE(first.snapshotId != second.snapshotId);
+    CHECK_EQ(engine.listSnapshots().size(), size_t(2));
+    CHECK_TRUE(fs::exists(store / "manifests" / (first.snapshotId + ".manifest")));
+    CHECK_TRUE(fs::exists(store / "manifests" / (second.snapshotId + ".manifest")));
 }
 
 TEST(backup_restore_unknown_snapshot_throws) {

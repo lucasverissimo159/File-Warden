@@ -43,6 +43,8 @@ if(FILEWARDEN_BUILD_TESTS)
       tests/test_sha256.cpp
       tests/test_duplicate_finder.cpp
       tests/test_backup_engine.cpp
+      tests/test_manifest.cpp
+      tests/test_cli.cpp
       tests/test_huffman.cpp
   )
   target_include_directories(filewarden_tests PRIVATE tests)
