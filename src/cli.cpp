@@ -90,12 +90,17 @@ std::string jsonEscape(const fs::path& p) { return jsonEscape(p.string()); }
 
 void moveFile(const fs::path& from, const fs::path& to) {
     fs::create_directories(to.parent_path());
+    fs::path target = to;
+    for (size_t suffix = 1; fs::exists(target); ++suffix) {
+        target = to;
+        target += "." + std::to_string(suffix);
+    }
     std::error_code ec;
-    fs::rename(from, to, ec);
+    fs::rename(from, target, ec);
     if (ec) {
         // rename() fails across filesystem boundaries (EXDEV); fall back to
         // copy + remove so the move still succeeds either way.
-        fs::copy_file(from, to, fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(from, target, fs::copy_options::none, ec);
         if (ec) throw std::runtime_error("Failed to move " + from.string() + ": " + ec.message());
         fs::remove(from);
     }
@@ -135,6 +140,22 @@ public:
 
     bool flag(const std::string& name) const {
         return std::find(raw_.begin(), raw_.end(), name) != raw_.end();
+    }
+
+    void validate(const std::vector<std::string>& flags,
+                  const std::vector<std::string>& valueOptions) const {
+        for (size_t i = 0; i < raw_.size(); ++i) {
+            if (raw_[i].rfind("--", 0) != 0) continue;
+            if (std::find(flags.begin(), flags.end(), raw_[i]) != flags.end()) continue;
+            if (std::find(valueOptions.begin(), valueOptions.end(), raw_[i]) != valueOptions.end()) {
+                if (i + 1 >= raw_.size() || raw_[i + 1].rfind("--", 0) == 0) {
+                    throw std::runtime_error("Option '" + raw_[i] + "' requires a value");
+                }
+                ++i;
+                continue;
+            }
+            throw std::runtime_error("Unknown option '" + raw_[i] + "'");
+        }
     }
 
     std::vector<std::string> positionals() const {
@@ -192,8 +213,9 @@ Examples:
 }
 
 int cmdScan(const ArgParser& args) {
+    args.validate({}, {});
     auto pos = args.positionals();
-    if (pos.empty()) {
+    if (pos.size() != 1) {
         std::cerr << "Usage: filewarden scan <path>\n";
         return 1;
     }
@@ -212,8 +234,9 @@ int cmdScan(const ArgParser& args) {
 }
 
 int cmdDedupe(const ArgParser& args) {
+    args.validate({"--json"}, {"--threads", "--min-size", "--keep", "--quarantine"});
     auto pos = args.positionals();
-    if (pos.empty()) {
+    if (pos.size() != 1) {
         std::cerr << "Usage: filewarden dedupe <path> [--threads N] [--min-size BYTES] "
                      "[--keep oldest|newest|first-path] [--quarantine <dir>] [--json]\n";
         return 1;
@@ -306,8 +329,9 @@ int cmdDedupe(const ArgParser& args) {
 }
 
 int cmdBackup(const ArgParser& args) {
+    args.validate({"--full-rehash", "--compress", "--json"}, {"--threads"});
     auto pos = args.positionals();
-    if (pos.size() < 2) {
+    if (pos.size() != 2) {
         std::cerr << "Usage: filewarden backup <source> <backup-root> [--threads N] [--full-rehash] [--compress] [--json]\n";
         return 1;
     }
@@ -363,8 +387,9 @@ int cmdBackup(const ArgParser& args) {
 }
 
 int cmdRestore(const ArgParser& args) {
+    args.validate({"--verify"}, {});
     auto pos = args.positionals();
-    if (pos.size() < 3) {
+    if (pos.size() != 3) {
         std::cerr << "Usage: filewarden restore <backup-root> <snapshot-id> <destination> [--verify]\n";
         return 1;
     }
@@ -384,8 +409,9 @@ int cmdRestore(const ArgParser& args) {
 }
 
 int cmdListSnapshots(const ArgParser& args) {
+    args.validate({"--json"}, {});
     auto pos = args.positionals();
-    if (pos.empty()) {
+    if (pos.size() != 1) {
         std::cerr << "Usage: filewarden list-snapshots <backup-root> [--json]\n";
         return 1;
     }
