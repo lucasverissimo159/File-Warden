@@ -34,6 +34,16 @@ std::string timestampId() {
     return oss.str();
 }
 
+std::string nextSnapshotId(const fs::path& manifestsDir, const fs::path& snapshotsDir) {
+    const std::string base = timestampId();
+    std::string candidate = base;
+    size_t suffix = 1;
+    while (fs::exists(manifestsDir / (candidate + ".manifest")) || fs::exists(snapshotsDir / candidate)) {
+        candidate = base + "_" + std::to_string(suffix++);
+    }
+    return candidate;
+}
+
 std::string readWholeFile(const fs::path& path) {
     std::ifstream in(path, std::ios::binary);
     if (!in) throw std::runtime_error("Cannot open file: " + path.string());
@@ -130,7 +140,7 @@ void BackupEngine::linkOrCopy(const fs::path& from, const fs::path& to) const {
 
 SnapshotStats BackupEngine::createSnapshot(const fs::path& source, ThreadPool& pool) {
     SnapshotStats stats;
-    stats.snapshotId = timestampId();
+    stats.snapshotId = nextSnapshotId(manifestsDir(), snapshotsDir());
 
     FileScannerOptions scanOpts;
     scanOpts.followSymlinks = options_.followSymlinks;
@@ -250,9 +260,37 @@ void BackupEngine::restoreSnapshot(const std::string& snapshotId, const fs::path
     }
     Manifest m = Manifest::load(manifestPath);
 
+    std::unordered_map<std::string, bool> expected;
+    expected.reserve(m.entries.size());
+    for (const auto& e : m.entries) expected.emplace(e.relativePath.generic_string(), true);
+
+    if (fs::exists(destination)) {
+        std::vector<fs::path> directories;
+        for (const auto& entry : fs::recursive_directory_iterator(destination)) {
+            fs::path relative = fs::relative(entry.path(), destination);
+            if (entry.is_directory()) {
+                directories.push_back(entry.path());
+            } else if (expected.find(relative.generic_string()) == expected.end()) {
+                std::error_code ec;
+                fs::remove_all(entry.path(), ec);
+                if (ec) throw std::runtime_error("Failed to remove stale restore path " + entry.path().string() + ": " + ec.message());
+            }
+        }
+        std::sort(directories.rbegin(), directories.rend());
+        for (const auto& directory : directories) {
+            std::error_code ec;
+            fs::remove(directory, ec);
+            if (ec) throw std::runtime_error("Failed to remove stale restore directory " + directory.string() + ": " + ec.message());
+        }
+    }
+
     for (const auto& e : m.entries) {
         fs::path dest = destination / e.relativePath;
         fs::create_directories(dest.parent_path());
+
+        if (fs::exists(dest) && !fs::is_regular_file(dest)) {
+            fs::remove_all(dest);
+        }
 
         fs::path compressedPath = compressedObjectPath(e.hash);
         if (fs::exists(compressedPath)) {

@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -36,9 +37,15 @@ std::string unescapePath(const std::string& s) {
     out.reserve(s.size());
     for (size_t i = 0; i < s.size(); ++i) {
         if (s[i] == '%' && i + 2 < s.size()) {
+            if (!std::isxdigit(static_cast<unsigned char>(s[i + 1])) ||
+                !std::isxdigit(static_cast<unsigned char>(s[i + 2]))) {
+                throw std::runtime_error("Invalid path escape in manifest");
+            }
             char c = static_cast<char>(std::strtol(s.substr(i + 1, 2).c_str(), nullptr, 16));
             out += c;
             i += 2;
+        } else if (s[i] == '%') {
+            throw std::runtime_error("Truncated path escape in manifest");
         } else {
             out += s[i];
         }
@@ -77,15 +84,19 @@ Manifest Manifest::load(const fs::path& file) {
 
         std::istringstream iss(line);
         std::string hash, sizeStr, mtimeStr, pathStr;
-        if (!std::getline(iss, hash, '\t')) continue;
-        if (!std::getline(iss, sizeStr, '\t')) continue;
-        if (!std::getline(iss, mtimeStr, '\t')) continue;
-        if (!std::getline(iss, pathStr)) continue;
+        if (!std::getline(iss, hash, '\t') || !std::getline(iss, sizeStr, '\t') ||
+            !std::getline(iss, mtimeStr, '\t') || !std::getline(iss, pathStr) || pathStr.empty()) {
+            throw std::runtime_error("Malformed manifest entry in " + file.string());
+        }
 
         ManifestEntry e;
         e.hash = hash;
-        e.size = std::stoull(sizeStr);
-        e.mtimeEpochSeconds = std::stoll(mtimeStr);
+        try {
+            e.size = std::stoull(sizeStr);
+            e.mtimeEpochSeconds = std::stoll(mtimeStr);
+        } catch (const std::exception&) {
+            throw std::runtime_error("Invalid numeric field in manifest " + file.string());
+        }
         e.relativePath = unescapePath(pathStr);
         m.entries.push_back(std::move(e));
     }
